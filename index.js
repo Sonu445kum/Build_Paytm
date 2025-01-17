@@ -4,6 +4,16 @@ const dotenv = require("dotenv");
 dotenv.config();
 const connectDB = require("./DB/index");
 connectDB();
+// middlewares
+const cors = require("cors");
+app.use(cors());
+const bodyParser = require("body-parser");
+app.use(bodyParser.json());
+
+
+//Routes;
+const userRoutes = require("./Routes/UserRoutes");
+app.use("/api/v1",userRoutes);
 app.get("/",(req,res)=>{
     res.send("hello")
 })
