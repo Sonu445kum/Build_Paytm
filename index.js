@@ -2,12 +2,14 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 dotenv.config();
+const cors = require("cors");
+const bodyParser = require("body-parser");
 const connectDB = require("./DB/index");
 connectDB();
 // middlewares
-const cors = require("cors");
+
 app.use(cors());
-const bodyParser = require("body-parser");
+app.use(express.json());
 app.use(bodyParser.json());
 
 
