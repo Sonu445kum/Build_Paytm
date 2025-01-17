@@ -72,7 +72,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
       console.error("Error in transfer logic:", error);
       res.status(400).json({ message: "Error in transfer logic" });
     } finally {
-      session.endSession(); // Ensure the session ends
+      session.endSession(); // Ensure the session end
     }
   });
 
