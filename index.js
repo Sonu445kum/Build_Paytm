@@ -16,6 +16,8 @@ app.use(bodyParser.json());
 //Routes;
 const userRoutes = require("./Routes/UserRoutes");
 app.use("/api/v1",userRoutes);
+const AccountRoutes = require("./Routes/AccountRoutes.js");
+app.use("/account",AccountRoutes);
 app.get("/",(req,res)=>{
     res.send("hello")
 })
