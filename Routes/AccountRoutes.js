@@ -27,44 +27,54 @@ router.get("/balance",authMiddleware,async(req,res)=>{
 
 
 // transfer money
-router.post("/transfer",authMiddleware,async(req,res)=>{
-
-   try {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    const {amount,to} = req.body;
-    const account = await Account.findOne({userId:req.userId}.session(session));
-
-    if(!account || account.balance < amount){
-        await session.abortTransaction();
-        return res.status(400).json({message:"Insufficient balance"});
+router.post("/transfer", authMiddleware, async (req, res) => {
+    const session = await mongoose.startSession(); // Initialize a session
+    try {
+      session.startTransaction();
+  
+      const { amount, to } = req.body;
+  
+      // Fetch sender's account with session
+      const account = await Account.findOne({ userId: req.userId }).session(session);
+  
+      if (!account || account.balance < amount) {
+        await session.abortTransaction(); // Abort the transaction
+        return res.status(400).json({ message: "Insufficient balance" });
+      }
+  
+      // Fetch recipient's account with session
+      const toAccount = await Account.findOne({ userId: to }).session(session);
+  
+      if (!toAccount) {
+        await session.abortTransaction(); // Abort the transaction
+        return res.status(400).json({ message: "Invalid account" });
+      }
+  
+      // Deduct amount from sender's account
+      await Account.updateOne(
+        { userId: req.userId },
+        { $inc: { balance: -amount } }
+      ).session(session);
+  
+      // Add amount to recipient's account
+      await Account.updateOne(
+        { userId: to },
+        { $inc: { balance: amount } }
+      ).session(session);
+  
+      // Commit transaction
+      await session.commitTransaction();
+  
+      res.status(200).json({ message: "Money transferred successfully" });
+    } catch (error) {
+      // Roll back transaction in case of error
+      await session.abortTransaction();
+      console.error("Error in transfer logic:", error);
+      res.status(400).json({ message: "Error in transfer logic" });
+    } finally {
+      session.endSession(); // Ensure the session ends
     }
-
-    // perform transaction
-    const toAccount = await Account.findOne({userId:to}.session(session));
-    if(!toAccount){
-        await session.abortTransaction();
-        return res.status(400).json({message:"Invalid Account"});
-    }
-
-    await Account.updateOne({userId:req.userId},{$inc:{balance:-amount}}.session(session));
-    await Account.updateOne({userId:to},{$inc:{balance:amount}}.session(session));
-
-    // commit transaction
-    await session.commitTransaction();
-    // await session.endSession();
-    res.status(200).json({message:"Money transferred successfully"});
-    
-   } catch (error) {
-    // if error in the above logic then show message below
-    await session.abortTransaction();
-    console.log(error);
-    res.status(400).json({message:"Error in transfer logic"});
-    
-   }
-    
-})
-
+  });
 
 
 // exports
